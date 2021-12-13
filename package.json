@@ -1,0 +1,22 @@
+{
+  "name": "sw-anti-reuploads-bot",
+  "version": "1.0.0",
+  "description": "A Discord Bot to stop reuploads in the world of Stormworks.",
+  "main": "bot.js",
+  "type": "module",
+  "scripts": {
+    "start": "node --experimental-json-modules bot.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/THE-SIMPLE-MARK/SW-Anti-Reuploads-Bot.git"
+  },
+  "author": "SIMPLE MARK",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^13.3.1",
+    "dotenv": "^10.0.0",
+    "mongoose": "^6.1.1"
+  }
+}
