@@ -12,7 +12,7 @@ import {
 } from './utils/registry.js';
 
 const client = new Client({
-	intents: [],
+	intents: [Intents.FLAGS.GUILDS],
 	disableEveryone: true
 });
 

@@ -1,0 +1,71 @@
+{
+  "response": {
+    "result": 1,
+    "resultcount": 1,
+    "publishedfiledetails": [
+      {
+        "publishedfileid": "2638432421",
+        "result": 1,
+        "creator": "76561198370542518",
+        "creator_app_id": 573090,
+        "consumer_app_id": 573090,
+        "filename": "",
+        "file_size": 618618,
+        "file_url": "",
+        "hcontent_file": "328026668331180901",
+        "preview_url": "https://steamuserimages-a.akamaihd.net/ugc/1794115111264440021/BAC20A8EF77B9F447B95E9D33F5D48F442094B60/",
+        "hcontent_preview": "1794115111264440021",
+        "title": "SM Nexus - Touring Rover",
+        "description": "[img]https://imgur.com/p7Fv1Z6.gif[/img]\r\n\r\n[code][h1]INTRODUCING THE SM Nexus Series[/h1]\r\n\r\nAnything but your average overland transport, the SM Nexus series sets new standards in adventure performance, fusing rugged capability with the style and attention to detail you expect from SM Industries. The ultimate hybrid of performance and passion.\r\n[img]https://i.imgur.com/zy4FETH.jpg[/img]\r\n[/code]\r\n\r\n[code][b]The open road is full of stories. How will you tell yours? Join the SM Industries Discord where you can do just that:[/b] https://discord.gg/5KV3ncvmuJ[/code]\r\n\r\n[code][h1][u]STANDARD EDITION FEATURES[/u][/h1]\r\n\r\n\"The impossible allure of the open road.\"\r\n\r\n[img]https://i.imgur.com/CkmrVrO.png[/img]\r\n[list]\r\n    [*][h2]BE PREPARED[/h2]\r\nFace danger head-on with the included SMGs and Rifles.\r\n    [*][h2]TAKE IT WITH YOU[/h2]\r\nThe road is unpredictable and you might want to bring a few things. Plus, you never know when the opportunity could arise to transport a crate or two. When adventure calls, the Nexus' spacious cargo capacity answers.\r\n    [*][h2]ATTACH AND INTEGRATE[/h2]\r\nCustom modules can be easily created and connected to the Nexus' cargo bay. You need something? Whatever you want can be added with ease, so long as you can create a module for it.\r\n    [*][h2]MULTIPLAYER FRIENDLY[/h2]\r\nAs with any other SM Industries creation, the Nexus is multiplayer friendly, you won't need to worry about lag when playing with friends. You'll be able to bring a couple of Nexuses into the game before lag becomes an issue.\r\n[/list]\r\n[/code]\r\n\r\n[code][h1][u]INSTRUCTIONS[/u][/h1]\r\n[olist]\r\n    [*]Sit down in the driver seat.\r\n    [*]Wait for SM OS to start up.\r\n    [*]Switch to the needed gear using the up/down arrows.\r\n[/olist]\r\n\r\n[/code]\r\n\r\n[code][h1][u]REPORTING BUGS[/u][/h1]\r\n\r\nYou can do this by opening a discussion on this page and setting the title to a short description of the bug, then describing the bug in detail in the actual description field.\r\n\r\n[/code]\r\n\r\n[code][h1][u]DO NOT REUPLOAD WITHOUT EXPLICIT PERMISSION FROM THE CREATOR(S)!![/u][/h1][/code]\r\n\r\n[code][h1][u]CREDITS[/u][/h1]\r\nSpecial Thanks to:\r\n[list]\r\n    [*]Geekness - For the touchscreen map.\r\n    [*]jecki1379 - For the touchscreen radio.\r\n[/list]\r\nThis creation was inspired by the Origin g12 series from Star Citizen.\r\n[/code]\r\n",
+        "time_created": 1635347058,
+        "time_updated": 1635348030,
+        "visibility": 0,
+        "banned": 0,
+        "ban_reason": "",
+        "subscriptions": 413,
+        "favorited": 4,
+        "lifetime_subscriptions": 459,
+        "lifetime_favorited": 4,
+        "views": 584,
+        "tags": [
+            {
+                "tag": "Advanced"
+            },
+            {
+                "tag": "Vehicle"
+            },
+            {
+                "tag": "v1.3.8"
+            },
+            {
+                "tag": "Land"
+            },
+            {
+                "tag": "Multi-vehicle"
+            },
+            {
+                "tag": "Delivery"
+            },
+            {
+                "tag": "Rescue"
+            },
+            {
+                "tag": "Fire"
+            },
+            {
+                "tag": "Exploration"
+            },
+            {
+                "tag": "Mechanical"
+            },
+            {
+                "tag": "Technical"
+            },
+            {
+                "tag": "Creative"
+            }
+        ]
+      }
+    ]
+  }
+}

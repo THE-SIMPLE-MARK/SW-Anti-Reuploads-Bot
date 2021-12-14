@@ -12,8 +12,6 @@ export function getRandomColor() {
 	return colors[Math.floor(Math.random() * colors.length)];
 }
 
-
-
 /**
  * @param {object} guild The guild object
  * @param {string} mention The mention to validate
