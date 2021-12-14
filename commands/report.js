@@ -9,7 +9,7 @@ export const data = new SlashCommandBuilder()
 
 import { SlashCommandBuilder, time } from "@discordjs/builders";
 import { profileSchema, reportSchema } from "../schemas.js";
-import { getRandomColor } from "../utils/helpers.js"
+import { footerIcon } from "../utils/helpers.js"
 import { mongo } from "../mongo.js";
 import * as Discord from "discord.js";
 import fetch from 'node-fetch';
@@ -30,7 +30,7 @@ export const execute = async (client, interaction) => {
 			form.append('itemcount', 1)
 			form.append('publishedfileids[0]', urlId)
 
-			// make the API request to check if the URL is a valid workshop URL and get relevant data
+			// fetch and extract data from the steam API
       const response = await fetch(
 				`http://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/?key=${process.env.STEAM_API_KEY}`,
 				{
@@ -41,7 +41,7 @@ export const execute = async (client, interaction) => {
 			);
 
 			// check if POST request was successful
-      if (!response.ok) return await interaction.editReply("There was an error while trying to process your request.")
+      if (!response.ok) return await interaction.editReply("An error occured while fetching the vehicle's details.")
 			
 			// extract data to JSON
       const data = await response.json();
@@ -56,6 +56,8 @@ export const execute = async (client, interaction) => {
 				vehicleTags += `,${tag.tag}`
 				vehicleTagsArr.push(tag.tag)
 			})
+			// remove first comma
+			vehicleTags = vehicleTags.substring(1)
 			if (!vehicleTags) vehicleTags = "No tags"
 
 			// check if the name of the vehicle is common amongst reuploaders
@@ -74,19 +76,27 @@ export const execute = async (client, interaction) => {
 				if (vehicleData.description != "") return "[❌] Has a description."
 			}
 
+			// fetch and extract data from the Steam API
+			const creatorData = await fetch(`https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=${process.env.STEAM_API_KEY}&steamids=${vehicleData.creator}`)
+			const creatorDataJson = await creatorData.json()
+			
+			// check if the request was successful
+			if (creatorDataJson.response.players[0].success == false) return await i.editReply("An error occured while fetching the creator's profile.")
+
 			// construct new Discord embed
 			const embed = new Discord.MessageEmbed()
-				.setColor(getRandomColor())
-				.setTitle(vehicleData.title)
+				.setAuthor(creatorDataJson.response.players[0].personaname, creatorDataJson.response.players[0].avatarfull, `https://steamcommunity.com/profiles/${vehicleData.creator}`)
+				.setColor("#BCBCBF")
+				.setTitle(vehicleData.title, `https://steamcommunity.com/sharedfiles/filedetails/?id=${vehicleData.publishedfileid}`)
 				.setURL(vehicleData.url)
 				.setDescription(
 				`__Reupload Probability:__\n -${checkCommonNames()}\n -${checkEmptyDescription()}`)
 				.setThumbnail(vehicleData.preview_url)
-				.addField("Steam URL", `https://steamcommunity.com/sharedfiles/filedetails/?id=${vehicleData.publishedfileid}`, true)
 				.addField("Tags", vehicleTags, true)
-				.addField("Creator", `https://steamcommunity.com/profiles/${vehicleData.creator}`, true)
-				.addField("Time Created", time(new Date(vehicleData.time_created)), true)
-				.addField("Time Updated", time(new Date(vehicleData.time_updated)), true)
+				.addField("Time Created", time(new Date(vehicleData.time_created*1000)), true)
+				.addField("Time Updated", time(new Date(vehicleData.time_updated*1000)), true)
+				.setFooter("Stormworks Anti Reuploads | Designed by SM Industries", footerIcon())
+				.setTimestamp()
 
 			// create buttons for the user to click on
 			const row = new Discord.MessageActionRow()
@@ -109,7 +119,7 @@ export const execute = async (client, interaction) => {
 			const collector = interaction.channel.createMessageComponentCollector({ filter, time: 14000 })
 			
 
-			function allocateXP() {
+			async function allocateXP() {
 				const xp = Math.floor(Math.random() * 5) + 1
 				await profileSchema.updateOne({ userId: interaction.user.id }, { $inc: { xp: xp } })
 			}
@@ -132,7 +142,8 @@ export const execute = async (client, interaction) => {
 						await reportSchema.findOneAndUpdate({ url: url }, { reporters: report.reporters })
 
 						// reply with success message
-						await i.editReply("Your report has been updated. As a reward for your contribution, you have been rewarded with some XP.")
+						allocateXP()
+						await i.editReply("Your report has been successfully submitted. As a reward for your contribution, you have been rewarded with some XP.")
 					} else {
 						const newArray = [interaction.user.id]
 						const report = new reportSchema({
@@ -149,6 +160,7 @@ export const execute = async (client, interaction) => {
 						}).save()
 
 						// reply with success message
+						allocateXP()
 						await i.editReply("Your report has been successfully submitted. As a reward for your contribution, you have been rewarded with some XP.")
 					}
 				} else if (i.customId === 'show_creator_profile') {
@@ -166,21 +178,12 @@ export const execute = async (client, interaction) => {
 						vehicleDescriptions.push(report.vehicle.description)
 						vehicleUrls.push(report.vehicle.steamUrl)
 					})
-					console.log(reports)
-					console.log(vehicleNames)
 
 					// combine vehicleNames with vehicleUrls to make hyperlinks
 					const vehicleNamesUrls = []
 					for (let i = 0; i < vehicleNames.length; i++) {
 						vehicleNamesUrls.push(`[${vehicleNames[i]}](${vehicleUrls[i]})`)
 					}
-
-					// fetch and extract data from the Steam API
-					const creatorData = await fetch(`https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=${process.env.STEAM_API_KEY}&steamids=${vehicleData.creator}`)
-					const creatorDataJson = await creatorData.json()
-					
-					// check if the request was successful
-					if (creatorDataJson.response.players[0].success == false) return await i.editReply("An error occured while fetching the creator's profile.")
 
 					// if the vehicleNamesUrls string is longer than 800 characters, it will be cut down to 800 characters and add a ... at the end
 					let vehicleDatas = vehicleNamesUrls.join('\n')
@@ -200,11 +203,13 @@ export const execute = async (client, interaction) => {
 
 					// create the embed
 					const embed = new Discord.MessageEmbed()
-						.setColor(getRandomColor())
+						.setColor("#BCBCBF")
 						.setTitle(`${creatorDataJson.response.players[0].personaname}'s Profile`)
-						.setDescription(`${creatorDataJson.response.players[0].personaname} has uploaded ${vehicleNames.length} vehicle(s).\n- ${(noDescriptions/100)*vehicleDescriptions.length}% of the vehicles have no description.\n- ${(commonNamesAm/100)*vehicleNames.length}% of the vehicles have common names.`)
+						.setDescription(`${creatorDataJson.response.players[0].personaname} has ${vehicleNames.length} flagged vehicle(s).\n- ${(noDescriptions/100)*vehicleDescriptions.length}% of the vehicles have no description.\n- ${(commonNamesAm/100)*vehicleNames.length}% of the vehicles have common names.`)
 						.setThumbnail(creatorDataJson.response.players[0].avatarfull)
 						.addField('Reported vehicles', `${vehicleDatas}`)
+						.setFooter("Stormworks Anti Reuploads | Designed by SM Industries", footerIcon())
+						.setTimestamp()
 					await i.editReply({ embeds: [embed] })
 				}
 			});

@@ -1,15 +1,10 @@
 import * as Discord from 'discord.js';
 
-// get colors from logo randomly
-
-const colors = ['#252526','#36393F','#40444B','#99DDCC','#272727','#BCBCBF','#4C4C4C','#405471','#8299BB']
-
 /**
- * @returns {string} Color code.
+ * @returns {string} Footer icon.
  */
-
-export function getRandomColor() {
-	return colors[Math.floor(Math.random() * colors.length)];
+export function footerIcon() {
+    return 'https://cdn.discordapp.com/attachments/902924492723068969/920358262887546931/sm_logo_transparent.png';
 }
 
 /**

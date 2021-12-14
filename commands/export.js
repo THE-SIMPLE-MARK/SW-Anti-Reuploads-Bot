@@ -8,7 +8,7 @@ export const data = new SlashCommandBuilder()
 			.setRequired(true))
 
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { getRandomColor } from "../utils/helpers.js"
+import { footerIcon } from "../utils/helpers.js"
 import * as Discord from "discord.js";
 
 export const execute = async (client, interaction) => {
