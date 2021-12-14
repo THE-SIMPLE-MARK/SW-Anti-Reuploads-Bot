@@ -2,6 +2,9 @@ import mongoose from "mongoose";
 const profile = mongoose.Schema({
 	discordId: { type: String, required: true },
 	createdAt: { type: Date, required: true },
+	lastActive: { type: Date, required: true },
+	isModerator: { type: Boolean, required: true },
+	isAdmin: { type: Boolean, required: true },
 	suspended: { type: Boolean, required: true },
 	rank: { type: Number, default: 0, required: true }
 });
@@ -9,6 +12,7 @@ export const profileSchema = mongoose.model('profiles', profile);
 
 const report = mongoose.Schema({
 	createdAt: { type: Date, required: true },
+	reportCreatorId: { type: String, required: true },
   steamId: { type: String, required: true },
 	creatorId: { type: String, required: true },
 	vehicle: {

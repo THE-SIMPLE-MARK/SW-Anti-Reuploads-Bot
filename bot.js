@@ -16,7 +16,7 @@ const client = new Client({
 	disableEveryone: true
 });
 
-//userDataManager(client);
+userDataManager(client);
 
 client.commands = new Collection();
 client.contexts = new Collection();

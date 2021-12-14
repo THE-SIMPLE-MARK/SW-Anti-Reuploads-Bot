@@ -9,7 +9,7 @@ export const data = new SlashCommandBuilder()
 
 import { SlashCommandBuilder, time } from "@discordjs/builders";
 import { profileSchema, reportSchema } from "../schemas.js";
-import { footerIcon } from "../utils/helpers.js"
+import { footerIcon, allocateXP } from "../utils/helpers.js"
 import { mongo } from "../mongo.js";
 import * as Discord from "discord.js";
 import fetch from 'node-fetch';
@@ -97,6 +97,10 @@ export const execute = async (client, interaction) => {
 				.addField("Time Updated", time(new Date(vehicleData.time_updated*1000)), true)
 				.setFooter("Stormworks Anti Reuploads | Designed by SM Industries", footerIcon())
 				.setTimestamp()
+			
+			// add a field if the report has a document
+			const report = await reportSchema.findOne({ steamId: vehicleData.publishedfileid })
+			if (report.reporters.length>0) embed.addField("Reported", `${report.reporters.length} time(s)`, true)
 
 			// create buttons for the user to click on
 			const row = new Discord.MessageActionRow()
@@ -117,12 +121,6 @@ export const execute = async (client, interaction) => {
 			// create collector for the buttons
 			const filter = i => i.user.id === interaction.user.id && !i.user.bot
 			const collector = interaction.channel.createMessageComponentCollector({ filter, time: 14000 })
-			
-
-			async function allocateXP() {
-				const xp = Math.floor(Math.random() * 5) + 1
-				await profileSchema.updateOne({ userId: interaction.user.id }, { $inc: { xp: xp } })
-			}
 
 			collector.on('collect', async (i) => {
 				if (i.customId === 'confirm_report') {
@@ -142,12 +140,13 @@ export const execute = async (client, interaction) => {
 						await reportSchema.findOneAndUpdate({ url: url }, { reporters: report.reporters })
 
 						// reply with success message
-						allocateXP()
+						allocateXP(i)
 						await i.editReply("Your report has been successfully submitted. As a reward for your contribution, you have been rewarded with some XP.")
 					} else {
 						const newArray = [interaction.user.id]
 						const report = new reportSchema({
 							createdAt: new Date(),
+							reportCreatorId: interaction.user.id,
 							steamId: vehicleData.publishedfileid,
 							creatorId: vehicleData.creator,
 							vehicle: {
@@ -160,7 +159,7 @@ export const execute = async (client, interaction) => {
 						}).save()
 
 						// reply with success message
-						allocateXP()
+						allocateXP(i)
 						await i.editReply("Your report has been successfully submitted. As a reward for your contribution, you have been rewarded with some XP.")
 					}
 				} else if (i.customId === 'show_creator_profile') {

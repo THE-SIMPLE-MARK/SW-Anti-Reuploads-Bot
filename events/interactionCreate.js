@@ -1,6 +1,28 @@
 export const name = 'interactionCreate';
+import { mongo } from "../mongo.js";
+import { profileSchema } from "../schemas.js";
 
 export const execute = async (client, interaction) => {
+	// if bot, ignore
+	if (interaction.user.bot) return;
+
+	// connect to database
+	let isMod = false;
+	let isAdmin = false;
+	let isSuspended = false;
+	await mongo().then(async () => {
+		// get user profile
+		const profile = await profileSchema.findOne({ discordId: interaction.user.id });
+		isMod = profile.isModerator
+		isAdmin = profile.isAdmin
+		isSuspended = profile.suspended
+		// stop user from using the bot if they are suspended
+	});
+	if (isSuspended) return await interaction.reply({
+		content: 'You have been suspended from using this bot. Ban appeals are not yet available.',
+		ephemeral: true,
+	})
+
 	// CHAT_INPUT commands
 	if (interaction.isCommand()) {
 		// if not in collection return
@@ -10,7 +32,7 @@ export const execute = async (client, interaction) => {
 			// execute command logic
 			await client.commands
 				.get(interaction.commandName)
-				.execute(client, interaction);
+				.execute(client, interaction, );
 		} catch (error) {
             console.error(error)
 			// respond with error messsage
