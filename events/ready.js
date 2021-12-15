@@ -8,7 +8,6 @@ const guildId = '899639850536411136';
 const privateCommands = [];
 const globalCommands = [];
 const testing = true; // enable this to register all commands private
-const fullPermissions = [];
 
 export const execute = async (client) => {
 	// set presence
