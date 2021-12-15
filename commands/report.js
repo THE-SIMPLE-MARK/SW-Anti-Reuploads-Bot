@@ -3,9 +3,13 @@ export const data = new SlashCommandBuilder()
 		.setDescription("Report a Stormworks creation.")
 		.setDefaultPermission(true)
 		.addStringOption(option =>
-			option.setName("url")
-			.setDescription("The URL for the creation.")
+			option.setName("report_url")
+			.setDescription("The URL for the creation to report.")
 			.setRequired(true))
+		.addStringOption(option =>
+			option.setName("original_url")
+			.setDescription("The URL for the original creation.")
+			.setRequired(false))
 
 import { SlashCommandBuilder, time } from "@discordjs/builders";
 import { profileSchema, reportSchema } from "../schemas.js";
@@ -20,15 +24,27 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 	await interaction.deferReply()
     // open database connection
     await mongo().then(async () => {
-      const url = interaction.options.getString("url")
+      const url = interaction.options.getString("report_url");
+			const originalUrl = interaction.options.getString("original_url");
+
       // return if input is not at least pretending to be a URL
       if (!url.startsWith("https://steamcommunity.com/sharedfiles/filedetails/?id=")) return await interaction.editReply("The input is not a valid steam URL.")
-      const urlId = url.replace(/^\D+/g, "")
+			const urlId = url.replace(/^\D+/g, "")
 			
 			// create and append data to a new form
 			const form = new FormData();
-			form.append('itemcount', 1)
+			
 			form.append('publishedfileids[0]', urlId)
+
+			// return if input is not at least pretending to be a URL
+			if (originalUrl) {
+				if (!originalUrl.startsWith("https://steamcommunity.com/sharedfiles/filedetails/?id=")) return await interaction.editReply("The input is not a valid steam URL.")
+				const originalUrlId = originalUrl.replace(/^\D+/g, "")
+				form.append('publishedfileids[1]', originalUrlId)
+				form.append('itemcount', 2)
+			} else {
+				form.append('itemcount', 1)
+			}
 
 			// fetch and extract data from the steam API
       const response = await fetch(
@@ -36,19 +52,24 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 				{
           method: 'POST',
 					body: form,
-          //headers: {'Content-Type': 'application/json'}
       	}
 			);
-
 			// check if POST request was successful
       if (!response.ok) return await interaction.editReply("An error occured while fetching the vehicle's details.")
 			
 			// extract data to JSON
       const data = await response.json();
-      const vehicleData = data.response.publishedfiledetails[0]
+      const vehicleData = data.response.publishedfiledetails[0];
+			let vehicleData2 = undefined;
+			if (originalUrl) {
+				vehicleData2 = data.response.publishedfiledetails[1];
+			}
 
 			// double check if request was successful from Steam's side
       if (vehicleData.result !== 1) return await interaction.editReply("The workshop vehicle given was not found.")
+			if (originalUrl) {
+				if (vehicleData2.result !== 1) return await interaction.editReply("The original workshop vehicle given was not found.")
+			}
 
 			let vehicleTags = "";
 			let vehicleTagsArr = [];
@@ -72,8 +93,8 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 			}
 			// check if the description of the vehicle is empty
 			function checkEmptyDescription() {
-				if (vehicleData.description == "") return "[✅] No description."
-				if (vehicleData.description != "") return "[❌] Has a description."
+				if (vehicleData.description == "" || vehicleData.description == "This vehicle does not have a description yet.") return "[✅] No description."
+				if (vehicleData.description != "" || vehicleData.description !== "This vehicle does not have a description yet.") return "[❌] Has a description."
 			}
 
 			// fetch and extract data from the Steam API
@@ -98,6 +119,8 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 				.setFooter("Stormworks Anti Reuploads | Designed by SM Industries", footerIcon())
 				.setTimestamp()
 			
+			if (originalUrl) embed.addField("Original Vehicle", `${vehicleData2.title}\nhttps://steamcommunity.com/sharedfiles/filedetails/?id=${vehicleData2.publishedfileid}`, true)
+
 			// add a field if the report has a document
 			const report = await reportSchema.findOne({ steamId: vehicleData.publishedfileid })
 			if (report) {
@@ -131,7 +154,7 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 
 			// create collector for the buttons
 			const filter = i => i.user.id === interaction.user.id && !i.user.bot
-			const collector = interaction.channel.createMessageComponentCollector({ filter, time: 14000 })
+			const collector = interaction.channel.createMessageComponentCollector({ filter, time: 1800000 }) // 30 minutes
 
 			collector.on('collect', async (i) => {
 				if (i.customId === 'confirm_report') {
@@ -142,33 +165,60 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 					// the reporters array is used to check if the report has already been reported by the user
 					// if not the current reporter is added to the array
 
-					const report = await reportSchema.findOne({ url: url })
+					const report = await reportSchema.findOne({ steamId: urlId })
 					if (report) {
 						// check if the user has already reported the vehicle
 						if (report.reporters.includes(interaction.user.id)) return await i.editReply("You have already reported this vehicle.")
 						report.reporters.push(interaction.user.id)
 						
-						await reportSchema.findOneAndUpdate({ url: url }, { reporters: report.reporters })
+						await reportSchema.findOneAndUpdate({ steamId: urlId }, { reporters: report.reporters })
 
 						// reply with success message
 						allocateXP(i)
 						await i.editReply("Your report has been successfully submitted. As a reward for your contribution, you have been rewarded with some XP.")
 					} else {
 						const newArray = [interaction.user.id]
-						const report = new reportSchema({
-							createdAt: new Date(),
-							reportCreatorId: interaction.user.id,
-							steamId: vehicleData.publishedfileid,
-							creatorId: vehicleData.creator,
-							vehicle: {
-								name: vehicleData.title,
-								steamUrl: `https://steamcommunity.com/sharedfiles/filedetails/?id=${vehicleData.publishedfileid}`,
-								previewUrl: vehicleData.preview_url,
-								creatorName: creatorDataJson.response.players[0].personaname,
-								tags: vehicleTagsArr,
-							},
-							reporters: newArray,
-						}).save()
+
+						// don't send the originalVehicle data if it doesn't exist
+						if (originalUrl) {
+							const report = new reportSchema({
+								createdAt: new Date(),
+								reportCreatorId: interaction.user.id,
+								steamId: vehicleData.publishedfileid,
+								creatorId: vehicleData.creator,
+								vehicle: {
+									name: vehicleData.title,
+									steamUrl: `https://steamcommunity.com/sharedfiles/filedetails/?id=${vehicleData.publishedfileid}`,
+									previewUrl: vehicleData.preview_url,
+									creatorName: creatorDataJson.response.players[0].personaname,
+									tags: vehicleTagsArr,
+								},
+								originalVehicle: {
+									name: vehicleData2.title,
+									steamUrl: `https://steamcommunity.com/sharedfiles/filedetails/?id=${vehicleData2.publishedfileid}`,
+								},
+								reporters: newArray,
+							}).save()
+						} else {
+							const report = new reportSchema({
+								createdAt: new Date(),
+								reportCreatorId: interaction.user.id,
+								steamId: vehicleData.publishedfileid,
+								creatorId: vehicleData.creator,
+								vehicle: {
+									name: vehicleData.title,
+									steamUrl: `https://steamcommunity.com/sharedfiles/filedetails/?id=${vehicleData.publishedfileid}`,
+									previewUrl: vehicleData.preview_url,
+									creatorName: creatorDataJson.response.players[0].personaname,
+									tags: vehicleTagsArr,
+								},
+								originalVehicle: {
+									name: undefined,
+									steamUrl: undefined,
+								},
+								reporters: newArray,
+							}).save()
+						}
 
 						// reply with success message
 						allocateXP(i)
@@ -201,22 +251,25 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 					if (vehicleNamesUrls.length > 800) vehicleNamesUrlsShort = vehicleNamesUrls.join('\n').slice(0, 800) + "..."
 					
 					// check how many of the creator's vehicles have common names
+					const commonNames = ["tank","plane","heli","helicopter","tank","car","vtol","house","building"]
 					let commonNamesAm = 0
 					vehicleNames.forEach(name => {
-						if (commonNames.includes(name.toLowerCase())) commonNamesCount++
+						if (commonNames.includes(name.toLowerCase())) commonNamesAm++
 					});
 
 					// check how many of the creator's vehicles have no descriptions
 					let noDescriptions = 0
 					vehicleDescriptions.forEach(description => {
-						if (description == "") noDescriptionsCount++
+						if (description == "" || description == "This vehicle does not have a description yet.") noDescriptions++
 					});
+					const vehicleDescriptionsPercent = Math.round((vehicleDescriptions.length - noDescriptions) / vehicleDescriptions.length * 100)
+					const commonNamesPercent = Math.round(commonNamesAm / vehicleNames.length * 100)
 
 					// create the embed
 					const embed = new Discord.MessageEmbed()
 						.setColor("#BCBCBF")
 						.setTitle(`${creatorDataJson.response.players[0].personaname}'s Profile`)
-						.setDescription(`${creatorDataJson.response.players[0].personaname} has ${vehicleNames.length} flagged vehicle(s).\n- ${(noDescriptions/100)*vehicleDescriptions.length}% of the vehicles have no description.\n- ${(commonNamesAm/100)*vehicleNames.length}% of the vehicles have common names.`)
+						.setDescription(`${creatorDataJson.response.players[0].personaname} has ${vehicleNames.length} flagged vehicle(s).\n- ${vehicleDescriptionsPercent}% of the vehicles have no description.\n- ${commonNamesPercent}% of the vehicles have common names.`)
 						.setThumbnail(creatorDataJson.response.players[0].avatarfull)
 						.addField('Reported vehicles', `${vehicleDatas}`)
 						.setFooter("Stormworks Anti Reuploads | Designed by SM Industries", footerIcon())

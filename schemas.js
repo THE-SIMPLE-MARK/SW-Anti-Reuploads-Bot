@@ -22,6 +22,10 @@ const report = mongoose.Schema({
 		creatorName: { type: String, required: true },
 		tags: { type: Array, required: true },
 	},
+	originalVehicle: {
+		name: { type: String, required: false },
+		steamUrl: { type: String, required: false },
+	},
   reporters: { type: Array, required: true }
 });
 export const reportSchema = mongoose.model('reports', report);

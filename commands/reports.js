@@ -1,6 +1,6 @@
 export const data = new SlashCommandBuilder()
 		.setName("reports")
-		.setDescription("Show a list of the top 100 reports.")
+		.setDescription("Show a list of the top 25 reports.")
 		.setDefaultPermission(true)
 
 import { SlashCommandBuilder } from "@discordjs/builders";
@@ -24,7 +24,11 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 			.setTimestamp()
 		// create buttons and send the embed with them
 		reportsData.forEach(report => {
-			embed.addField(`\`${reportsData.indexOf(report)+1}\`-${report.vehicle.name} by ${report.vehicle.creatorName}`, `[*This vehicle was reported ${report.reporters.length} time(s).*](${report.vehicle.steamUrl})`, false)
+			if (report.originalVehicle) {
+				embed.addField(`\`${reportsData.indexOf(report)+1}\`-${report.vehicle.name} by ${report.vehicle.creatorName}`, `[*This vehicle was reported ${report.reporters.length} time(s).*](${report.vehicle.steamUrl})\n__Original vehicle: [${report.originalVehicle.steamUrl}](${report.originalVehicle.steamUrl})__`, false)
+			} else {
+				embed.addField(`\`${reportsData.indexOf(report)+1}\`-${report.vehicle.name} by ${report.vehicle.creatorName}`, `[*This vehicle was reported ${report.reporters.length} time(s).*](${report.vehicle.steamUrl})`, false)
+			}
 		});
 		// if there are no reports add a new field
 		if (reportsData.length == 0) {

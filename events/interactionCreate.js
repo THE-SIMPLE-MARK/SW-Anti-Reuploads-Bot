@@ -14,13 +14,32 @@ export const execute = async (client, interaction) => {
 	let isAdmin = false;
 	let isSuspended = false;
 	await mongo().then(async () => {
-		// get user profile
+		// check if user has a profile
 		const profile = await profileSchema.findOne({ discordId: interaction.user.id });
-		isMod = profile.isModerator
-		isAdmin = profile.isAdmin
-		isSuspended = profile.suspended
-		// stop user from using the bot if they are suspended
+		// if it doesn't exist, create it
+		if (!profile) {
+				await new profileSchema({
+						discordId: interaction.user.id,
+						createdAt: new Date(),
+						lastActive: new Date(),
+						isModerator: false,
+						isAdmin: false,
+						suspended: false,
+						rank: 0,
+				}).save()
+		} else {
+				// update last active
+				await profileSchema.updateOne({ discordId: interaction.user.id }, { lastActive: new Date() });
+		}
+
+		// get user profile
+		const profileAfter = await profileSchema.findOne({ discordId: interaction.user.id });
+		isMod = profileAfter.isModerator
+		isAdmin = profileAfter.isAdmin
+		isSuspended = profileAfter.suspended
 	});
+	
+	// stop user from using the bot if they are suspended
 	if (isSuspended) return await interaction.reply({
 		content: 'You have been suspended from using this bot. Ban appeals are not yet available.',
 		ephemeral: true,

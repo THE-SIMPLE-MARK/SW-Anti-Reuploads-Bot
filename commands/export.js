@@ -20,14 +20,19 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 	await mongo().then(async () => {
 		// get all reports
 		const amount = interaction.options.getNumber("amount")
+		if (amount>100) return await interaction.editReply("Please do not export more than 100 reports at once.")
 		const reportsData = await reportSchema.find({}).sort({ createdAt: -1 }).limit(amount)
 
 		// get required data and convert to csv
 		const data = [
-			{ index: "0", createdAt: "Report Created At", steamCreatorId: "Author of vehicle ID", steamCreatorName: "Vehicle author name", vehicleName: "Vehicle name", vehicleUrl: "Vehicle URL" }
+			{ index: "0", createdAt: "Report Created At", steamCreatorId: "Author of vehicle ID", steamCreatorName: "Vehicle author name", vehicleName: "Vehicle name", vehicleUrl: "Vehicle URL", originalVehicleName: "Original Vehicle Name", originalVehicleUrl: "Original Vehicle URL" }
 		]
 		reportsData.forEach(report => {
-			data.push({ index: reportsData.indexOf(report)+1, createdAt: report.createdAt.toString(), steamCreatorId: report.creatorId, steamCreatorName: report.vehicle.creatorName, vehicleName: report.vehicle.name, vehicleUrl: report.vehicle.steamUrl })
+			if (report.originalVehicle.name) {
+				data.push({ index: reportsData.indexOf(report)+1, createdAt: report.createdAt.toString(), steamCreatorId: report.creatorId, steamCreatorName: report.vehicle.creatorName, vehicleName: report.vehicle.name, vehicleUrl: report.vehicle.steamUrl, originalVehicleName: report.originalVehicle.name, originalVehicleUrl: report.originalVehicle.steamUrl })
+			} else {
+				data.push({ index: reportsData.indexOf(report)+1, createdAt: report.createdAt.toString(), steamCreatorId: report.creatorId, steamCreatorName: report.vehicle.creatorName, vehicleName: report.vehicle.name, vehicleUrl: report.vehicle.steamUrl, originalVehicleName: "-", originalVehicleUrl: "-" })
+			}
 		})
 
 		const jsonObject = JSON.stringify(data)

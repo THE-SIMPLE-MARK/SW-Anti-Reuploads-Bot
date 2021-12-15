@@ -35,7 +35,6 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
     // check how many vehicles the user has reported
     let reports = 0;
     reportsData.forEach(report => {
-      console.log(report.reportCreatorId === profile.discordId)
       if (report.reportCreatorId === profile.discordId) reports++
     });
 
@@ -77,7 +76,7 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 
     // create collector for the buttons
 		const filter = i => i.user.id === interaction.user.id && !i.user.bot
-		const collector = interaction.channel.createMessageComponentCollector({ filter, time: 14000 })
+		const collector = interaction.channel.createMessageComponentCollector({ filter, time: 1800000 }) // 30 minutes
 
 		collector.on('collect', async (i) => {
 			if (i.customId === 'suspend_account') {

@@ -7,7 +7,7 @@ const setInteractions = true; // wether to set the commands&context menus on sta
 const guildId = '899639850536411136';
 const privateCommands = [];
 const globalCommands = [];
-const testing = true; // enable this to register all commands private
+const testing = false; // enable this to register all commands private
 
 export const execute = async (client) => {
 	// set presence

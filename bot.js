@@ -1,8 +1,6 @@
 import { Client, Intents, Collection } from 'discord.js';
 import 'dotenv/config';
 
-import { userDataManager } from './functions/userDataManager.js';
-
 import {
 	commands,
 	contexts,
@@ -15,8 +13,6 @@ const client = new Client({
 	intents: [Intents.FLAGS.GUILDS],
 	disableEveryone: true
 });
-
-userDataManager(client);
 
 client.commands = new Collection();
 client.contexts = new Collection();
