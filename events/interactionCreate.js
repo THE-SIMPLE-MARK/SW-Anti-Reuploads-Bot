@@ -1,6 +1,9 @@
 export const name = 'interactionCreate';
 import { mongo } from "../mongo.js";
 import { profileSchema } from "../schemas.js";
+import { RateLimiter } from "discord.js-rate-limiter";
+
+const rateLimiter = new RateLimiter(1,2000);
 
 export const execute = async (client, interaction) => {
 	// if bot, ignore
@@ -27,12 +30,17 @@ export const execute = async (client, interaction) => {
 	if (interaction.isCommand()) {
 		// if not in collection return
 		if (!client.commands.has(interaction.commandName)) return;
+		// check if user is rate limited
+		if (rateLimiter.take(interaction.user.id)) return await interaction.reply({
+			content: 'You are being rate limited. Please wait a few seconds and try again.',
+			ephemeral: true,
+		});
 
 		try {
 			// execute command logic
 			await client.commands
 				.get(interaction.commandName)
-				.execute(client, interaction, );
+				.execute(client, interaction, isMod, isAdmin);
 		} catch (error) {
             console.error(error)
 			// respond with error messsage
@@ -47,12 +55,17 @@ export const execute = async (client, interaction) => {
 	if (interaction.isContextMenu()) {
 		// if not in collection return
 		if (!client.contexts.has(interaction.commandName)) return;
+		// check if user is rate limited
+		if (rateLimiter.take(interaction.user.id)) return await interaction.reply({
+			content: 'You are being rate limited. Please wait a few seconds and try again.',
+			ephemeral: true,
+		});
 
 		try {
 			// execute command logic
 			await client.contexts
 				.get(interaction.commandName)
-				.execute(client, interaction, interaction.options.getMessage('message'));
+				.execute(client, interaction, interaction.options.getMessage('message'), isMod, isAdmin);
 		} catch (error) {
             console.error(error)
 			// respond with error message
@@ -67,12 +80,17 @@ export const execute = async (client, interaction) => {
 	if (interaction.isButton()) {
 		// if not in collection return
 		if (!client.buttons.has(interaction.customId)) return;
-
+		// check if user is rate limited
+		if (rateLimiter.take(interaction.user.id)) return await interaction.reply({
+			content: 'You are being rate limited. Please wait a few seconds and try again.',
+			ephemeral: true,
+		});
+		
 		try {
 			// execute button logic
 			await client.buttons
 				.get(interaction.customId)
-				.execute(client, interaction);
+				.execute(client, interaction, isMod, isAdmin);
 		} catch (error) {
             console.error(error)
 			// respond with error message
@@ -87,6 +105,11 @@ export const execute = async (client, interaction) => {
 	if (interaction.isSelectMenu()) {
 		// if not in collection return
 		if (!client.menus.has(interaction.customId)) return;
+		// check if user is rate limited
+		if (rateLimiter.take(interaction.user.id)) return await interaction.reply({
+			content: 'You are being rate limited. Please wait a few seconds and try again.',
+			ephemeral: true,
+		});
 
 		try {
 			// execute menu logic

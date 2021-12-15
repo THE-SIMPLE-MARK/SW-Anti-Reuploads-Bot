@@ -16,7 +16,7 @@ import fetch from 'node-fetch';
 import { FormData } from 'formdata-polyfill/esm.min.js';
 import 'dotenv/config';
 
-export const execute = async (client, interaction) => {
+export const execute = async (client, interaction, isMod, isAdmin) => {
 	await interaction.deferReply()
     // open database connection
     await mongo().then(async () => {
@@ -100,7 +100,11 @@ export const execute = async (client, interaction) => {
 			
 			// add a field if the report has a document
 			const report = await reportSchema.findOne({ steamId: vehicleData.publishedfileid })
-			if (report.reporters.length>0) embed.addField("Reported", `${report.reporters.length} time(s)`, true)
+			if (report) {
+				if (report.reporters.length>0) {
+					embed.addField("Reported", `${report.reporters.length} time(s)`, true)
+				}
+			}
 
 			// create buttons for the user to click on
 			const row = new Discord.MessageActionRow()
@@ -108,11 +112,18 @@ export const execute = async (client, interaction) => {
 					new Discord.MessageButton()
 						.setCustomId('confirm_report')
 						.setLabel('Confirm Report')
-						.setStyle('DANGER'),
+						.setStyle('SUCCESS'),
 					new Discord.MessageButton()
 						.setCustomId('show_creator_profile')
 						.setLabel('Show Creator Profile')
 						.setStyle('PRIMARY')
+				)
+				// button for admins and moderators to delete the report if it's already created
+				if (isAdmin || isMod) row.addComponents(
+					new Discord.MessageButton()
+						.setCustomId('delete_report')
+						.setLabel('Delete Report')
+						.setStyle('DANGER')
 				)
 
 			// send the embed to the channel
@@ -153,6 +164,7 @@ export const execute = async (client, interaction) => {
 								name: vehicleData.title,
 								steamUrl: `https://steamcommunity.com/sharedfiles/filedetails/?id=${vehicleData.publishedfileid}`,
 								previewUrl: vehicleData.preview_url,
+								creatorName: creatorDataJson.response.players[0].personaname,
 								tags: vehicleTagsArr,
 							},
 							reporters: newArray,
@@ -210,6 +222,17 @@ export const execute = async (client, interaction) => {
 						.setFooter("Stormworks Anti Reuploads | Designed by SM Industries", footerIcon())
 						.setTimestamp()
 					await i.editReply({ embeds: [embed] })
+				} else if (i.customId === 'delete_report') {
+					await i.deferReply()
+
+					// delete the report if it exists
+					const report = await reportSchema.findOne({ steamId: vehicleData.publishedfileid });
+					if (report) {
+						await reportSchema.findOneAndDelete({ steamId: urlId });
+						await i.editReply("The report has been successfully deleted.")
+					} else {
+						await i.editReply("There is no report to delete for this vehicle.")
+					}
 				}
 			});
     });

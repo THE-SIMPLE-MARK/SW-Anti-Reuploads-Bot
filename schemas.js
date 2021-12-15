@@ -19,6 +19,7 @@ const report = mongoose.Schema({
 		name: { type: String, required: true },
 		steamUrl: { type: String, required: true },
 		previewUrl: { type: String, required: true },
+		creatorName: { type: String, required: true },
 		tags: { type: Array, required: true },
 	},
   reporters: { type: Array, required: true }

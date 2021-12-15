@@ -10,8 +10,54 @@ export const data = new SlashCommandBuilder()
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { footerIcon } from "../utils/helpers.js"
 import * as Discord from "discord.js";
+import { mongo } from "../mongo.js";
+import { profileSchema, reportSchema } from "../schemas.js";
 
-export const execute = async (client, interaction) => {
+export const execute = async (client, interaction, isMod, isAdmin) => {
 	await interaction.deferReply()
-    await interaction.editReply("Command doesn't work yet.")
+
+	// open database connection
+	await mongo().then(async () => {
+		// get all reports
+		const amount = interaction.options.getNumber("amount")
+		const reportsData = await reportSchema.find({}).sort({ createdAt: -1 }).limit(amount)
+
+		// get required data and convert to csv
+		const data = [
+			{ index: "0", createdAt: "Report Created At", steamCreatorId: "Author of vehicle ID", steamCreatorName: "Vehicle author name", vehicleName: "Vehicle name", vehicleUrl: "Vehicle URL" }
+		]
+		reportsData.forEach(report => {
+			data.push({ index: reportsData.indexOf(report)+1, createdAt: report.createdAt.toString(), steamCreatorId: report.creatorId, steamCreatorName: report.vehicle.creatorName, vehicleName: report.vehicle.name, vehicleUrl: report.vehicle.steamUrl })
+		})
+
+		const jsonObject = JSON.stringify(data)
+		const csv = convertToCSV(jsonObject)
+
+		const date = new Date()
+		const dateFull = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}`
+
+		const file = new Discord.MessageAttachment(Buffer.from(csv), `reuploads-export-${interaction.user.id}-${dateFull}.csv`)
+
+		// send file
+		await interaction.editReply({ files: [file] })
+	});
 };
+
+
+function convertToCSV(objArray) {
+	const array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
+	let str = '';
+
+	for (let i = 0; i < array.length; i++) {
+		let line = '';
+		for (const index in array[i]) {
+			if (line != '') line += ','
+
+				line += array[i][index];
+		}
+
+		str += line + '\r\n';
+	}
+
+	return str;
+}

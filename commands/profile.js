@@ -13,7 +13,7 @@ import * as Discord from "discord.js";
 import { mongo } from "../mongo.js";
 import { profileSchema, reportSchema } from "../schemas.js";
 
-export const execute = async (client, interaction) => {
+export const execute = async (client, interaction, isMod, isAdmin) => {
 	await interaction.deferReply()
   // open database connection
   await mongo().then(async () => {
@@ -50,12 +50,12 @@ export const execute = async (client, interaction) => {
       .setFooter("Stormworks Anti Reuploads | Designed by SM Industries", footerIcon())
       .setTimestamp()
     // if user is moderator add author to embed
-    if (authorProfile.isModerator) embed.setAuthor("Moderator", "https://cdn.discordapp.com/attachments/902924492723068969/920396042539790386/staff_icon.png")
-    if (authorProfile.isAdmin) embed.setAuthor("Administrator", "https://cdn.discordapp.com/attachments/902924492723068969/920396042539790386/staff_icon.png")
+    if (isMod) embed.setAuthor("Moderator", "https://cdn.discordapp.com/attachments/902924492723068969/920396042539790386/staff_icon.png")
+    if (isAdmin) embed.setAuthor("Administrator", "https://cdn.discordapp.com/attachments/902924492723068969/920396042539790386/staff_icon.png")
     if (authorProfile.suspended) embed.setAuthor("Account suspended", "https://cdn.discordapp.com/attachments/902924492723068969/920402075194654720/Suspended.png")
 
-    // create buttons
-    if (profile.suspended && (authorProfile.isModerator || authorProfile.isAdmin) && authorProfile.discordId !== profile.discordId) {
+    // create buttons and send the embed with them
+    if (profile.suspended && (isMod || isAdmin) && authorProfile.discordId !== profile.discordId) {
       const row = new Discord.MessageActionRow()
       .addComponents(
         new Discord.MessageButton()
@@ -64,7 +64,7 @@ export const execute = async (client, interaction) => {
           .setStyle('DANGER')
       )
       await interaction.editReply({ embeds: [embed], components: [row] })
-    } else if (!profile.suspended && (authorProfile.isModerator || authorProfile.isAdmin) && authorProfile.discordId !== profile.discordId) {
+    } else if (!profile.suspended && (isMod || isAdmin) && authorProfile.discordId !== profile.discordId) {
       const row = new Discord.MessageActionRow()
       .addComponents(
         new Discord.MessageButton()
