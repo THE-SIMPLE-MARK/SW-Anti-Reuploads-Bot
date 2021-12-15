@@ -3,7 +3,7 @@ import { mongo } from "../mongo.js";
 import { profileSchema } from "../schemas.js";
 import { RateLimiter } from "discord.js-rate-limiter";
 
-const rateLimiter = new RateLimiter(1,2000);
+const rateLimiter = new RateLimiter(3,10*1000);
 
 export const execute = async (client, interaction) => {
 	// if bot, ignore
@@ -85,7 +85,7 @@ export const execute = async (client, interaction) => {
 			content: 'You are being rate limited. Please wait a few seconds and try again.',
 			ephemeral: true,
 		});
-		
+
 		try {
 			// execute button logic
 			await client.buttons
