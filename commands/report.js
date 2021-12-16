@@ -20,6 +20,17 @@ import fetch from 'node-fetch';
 import { FormData } from 'formdata-polyfill/esm.min.js';
 import 'dotenv/config';
 
+const commonNames = [
+	"plane", "heli",
+	"helicopter", "tank",
+	"car", "vtol",
+	"house", "building",
+	"boat", "ship",
+	"truck", "sub",
+	"submarine", "rocket",
+	"spacecraft", "spaceship",
+	"base", "microcontroller","tank","test","fly"];
+
 export const execute = async (client, interaction, isMod, isAdmin) => {
 	await interaction.deferReply()
     // open database connection
@@ -29,7 +40,7 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 
       // return if input is not at least pretending to be a URL
       if (!url.startsWith("https://steamcommunity.com/sharedfiles/filedetails/?id=")) return await interaction.editReply("The input is not a valid steam URL.")
-			const urlId = url.replace(/^\D+/g, "")
+			const urlId = url.replace(/\D+/g, "")
 			
 			// create and append data to a new form
 			const form = new FormData();
@@ -82,7 +93,6 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 			if (!vehicleTags) vehicleTags = "No tags"
 
 			// check if the name of the vehicle is common amongst reuploaders
-			const commonNames = ["Tank","Plane","Heli","Helicopter","Tank","Car","VTOL","House","Building"]
 			function checkCommonNames() {
 				let output = false;
 				commonNames.forEach(name => {
@@ -157,8 +167,12 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 			const collector = interaction.channel.createMessageComponentCollector({ filter, time: 1800000 }) // 30 minutes
 
 			collector.on('collect', async (i) => {
+				console.log("button pressed")
+				// for some reason some users are able to go through the filter sometimes and press the buttons of other users' => check if the user is the same
+				if (i.user.id !== interaction.user.id) return await i.reply("You seriously thought I would let you do that?")
+
 				if (i.customId === 'confirm_report') {
-					await i.deferReply()
+					console.log("confirm report")
 
 					// create new report
 					// check if report already exists and update it if it does update it, otherwise create a new one
@@ -166,17 +180,23 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 					// if not the current reporter is added to the array
 
 					const report = await reportSchema.findOne({ steamId: urlId })
+					console.log(report)
+					console.log(interaction.user)
+					console.log((report.reporters.includes(interaction.user.id)))
 					if (report) {
 						// check if the user has already reported the vehicle
-						if (report.reporters.includes(interaction.user.id)) return await i.editReply("You have already reported this vehicle.")
+						if (report.reporters.includes(interaction.user.id)) return await i.reply("You have already reported this vehicle.")
+						console.log("report exists")
 						report.reporters.push(interaction.user.id)
 						
-						await reportSchema.findOneAndUpdate({ steamId: urlId }, { reporters: report.reporters })
+						// count the vote
+						await reportSchema.findOneAndUpdate({ steamId: urlId }, { reporters: report.reporters, reportAm: report.reportAm+1 })
 
 						// reply with success message
 						allocateXP(i)
-						await i.editReply("Your report has been successfully submitted. As a reward for your contribution, you have been rewarded with some XP.")
+						await i.reply("Your report has been successfully submitted. As a reward for your contribution, you have been rewarded with some XP.")
 					} else {
+						console.log("report does not exist")
 						const newArray = [interaction.user.id]
 
 						// don't send the originalVehicle data if it doesn't exist
@@ -198,6 +218,7 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 									steamUrl: `https://steamcommunity.com/sharedfiles/filedetails/?id=${vehicleData2.publishedfileid}`,
 								},
 								reporters: newArray,
+								reportAm: 1
 							}).save()
 						} else {
 							const report = new reportSchema({
@@ -217,15 +238,15 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 									steamUrl: undefined,
 								},
 								reporters: newArray,
+								reportAm: 1,
 							}).save()
 						}
 
 						// reply with success message
 						allocateXP(i)
-						await i.editReply("Your report has been successfully submitted. As a reward for your contribution, you have been rewarded with some XP.")
+						await i.reply("Your report has been successfully submitted. As a reward for your contribution, you have been rewarded with some XP.")
 					}
 				} else if (i.customId === 'show_creator_profile') {
-					await i.deferReply()
 
 					// get all reported vehicles from the creator
 					const reports = await reportSchema.find({ creatorId: vehicleData.creator })
@@ -251,7 +272,6 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 					if (vehicleNamesUrls.length > 800) vehicleNamesUrlsShort = vehicleNamesUrls.join('\n').slice(0, 800) + "..."
 					
 					// check how many of the creator's vehicles have common names
-					const commonNames = ["tank","plane","heli","helicopter","tank","car","vtol","house","building"]
 					let commonNamesAm = 0
 					vehicleNames.forEach(name => {
 						if (commonNames.includes(name.toLowerCase())) commonNamesAm++
@@ -274,17 +294,16 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 						.addField('Reported vehicles', `${vehicleDatas}`)
 						.setFooter("Stormworks Anti Reuploads | Designed by SM Industries", footerIcon())
 						.setTimestamp()
-					await i.editReply({ embeds: [embed] })
+					await i.reply({ embeds: [embed] })
 				} else if (i.customId === 'delete_report') {
-					await i.deferReply()
 
 					// delete the report if it exists
 					const report = await reportSchema.findOne({ steamId: vehicleData.publishedfileid });
 					if (report) {
 						await reportSchema.findOneAndDelete({ steamId: urlId });
-						await i.editReply("The report has been successfully deleted.")
+						await i.reply("The report has been successfully deleted.")
 					} else {
-						await i.editReply("There is no report to delete for this vehicle.")
+						await i.reply("There is no report to delete for this vehicle.")
 					}
 				}
 			});

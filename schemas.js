@@ -26,6 +26,7 @@ const report = mongoose.Schema({
 		name: { type: String, required: false },
 		steamUrl: { type: String, required: false },
 	},
-  reporters: { type: Array, required: true }
+  reporters: { type: Array, required: true },
+	reportAm: { type: Number, required: true }
 });
 export const reportSchema = mongoose.model('reports', report);

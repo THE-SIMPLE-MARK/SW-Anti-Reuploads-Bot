@@ -40,10 +40,17 @@ export const execute = async (client, interaction) => {
 	});
 	
 	// stop user from using the bot if they are suspended
-	if (isSuspended) return await interaction.reply({
-		content: 'You have been suspended from using this bot. Ban appeals are not yet available.',
-		ephemeral: true,
-	})
+	try {
+		if (isSuspended) return await interaction.reply({
+			content: 'You have been suspended from using this bot. Ban appeals are not yet available.',
+			ephemeral: true,
+		})
+	} catch(e) {
+		return await interaction.editReply({
+			content: 'You have been suspended from using this bot. Ban appeals are not yet available.',
+			ephemeral: true,
+		})
+	}
 
 	// CHAT_INPUT commands
 	if (interaction.isCommand()) {
@@ -61,7 +68,7 @@ export const execute = async (client, interaction) => {
 				.get(interaction.commandName)
 				.execute(client, interaction, isMod, isAdmin);
 		} catch (error) {
-            console.error(error)
+      console.error(error)
 			// respond with error messsage
 			await interaction.reply({
 				content: 'There was an error while executing this command!',
@@ -86,7 +93,7 @@ export const execute = async (client, interaction) => {
 				.get(interaction.commandName)
 				.execute(client, interaction, interaction.options.getMessage('message'), isMod, isAdmin);
 		} catch (error) {
-            console.error(error)
+      console.error(error)
 			// respond with error message
 			await interaction.reply({
 				content: 'There was an error while executing this command!',
@@ -111,7 +118,7 @@ export const execute = async (client, interaction) => {
 				.get(interaction.customId)
 				.execute(client, interaction, isMod, isAdmin);
 		} catch (error) {
-            console.error(error)
+      console.error(error)
 			// respond with error message
 			await interaction.reply({
 				content: 'There was an error while executing this command!',
@@ -134,7 +141,7 @@ export const execute = async (client, interaction) => {
 			// execute menu logic
 			await client.menus.get(interaction.customId).execute(client, interaction);
 		} catch (error) {
-            console.error(error)
+      console.error(error)
 			// respond with error message
 			await interaction.reply({
 				content: 'There was an error while executing this command!',

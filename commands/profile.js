@@ -21,6 +21,7 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
     const user = interaction.options.getUser("profile")
     // get user's profile
     const profile = await profileSchema.findOne({ discordId: user ? user.id : interaction.user.id })
+    if (!profile) return await interaction.editReply("That user doesn't have an account yet.")
     // get author's profile
     const authorProfile = await profileSchema.findOne({ discordId: interaction.user.id })
     // get all reports
@@ -43,15 +44,21 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
       .setColor("#BCBCBF")
       .setTitle(`${user ? user.username : interaction.user.username}'s Profile`)
       .setThumbnail(user ? user.avatarURL() : interaction.user.avatarURL())
-      .setDescription(`**Rank:** ${profile.rank}\n**Last Active:** ${time(new Date(profile.lastActive))}\n**Created At:** ${time(new Date(profile.createdAt))}`)
+      .setDescription(`**Rank:** ${Math.round(profile.rank * 10) / 10}\n**Last Active:** ${time(new Date(profile.lastActive))}\n**Created At:** ${time(new Date(profile.createdAt))}`)
       .addField("Reports", reports.toString(), true)
       .addField("Votes", reportsWithVotes.toString(), true)
       .setFooter("Stormworks Anti Reuploads | Designed by SM Industries", footerIcon())
       .setTimestamp()
     // if user is moderator add author to embed
-    if (isMod) embed.setAuthor("Moderator", "https://cdn.discordapp.com/attachments/902924492723068969/920396042539790386/staff_icon.png")
-    if (isAdmin) embed.setAuthor("Administrator", "https://cdn.discordapp.com/attachments/902924492723068969/920396042539790386/staff_icon.png")
-    if (authorProfile.suspended) embed.setAuthor("Account suspended", "https://cdn.discordapp.com/attachments/902924492723068969/920402075194654720/Suspended.png")
+    if (profile) {
+      if (profile.isModerator) embed.setAuthor("Moderator", "https://cdn.discordapp.com/attachments/902924492723068969/920396042539790386/staff_icon.png")
+      if (profile.isAdmin) embed.setAuthor("Administrator", "https://cdn.discordapp.com/attachments/902924492723068969/920396042539790386/staff_icon.png")
+      if (profile.suspended) embed.setAuthor("Account suspended", "https://cdn.discordapp.com/attachments/902924492723068969/920402075194654720/Suspended.png")
+    } else {
+      if (isMod) embed.setAuthor("Moderator", "https://cdn.discordapp.com/attachments/902924492723068969/920396042539790386/staff_icon.png")
+      if (isAdmin) embed.setAuthor("Administrator", "https://cdn.discordapp.com/attachments/902924492723068969/920396042539790386/staff_icon.png")
+      if (authorProfile.suspended) embed.setAuthor("Account suspended", "https://cdn.discordapp.com/attachments/902924492723068969/920402075194654720/Suspended.png")
+    }
 
     // create buttons and send the embed with them
     if (profile.suspended && (isMod || isAdmin) && authorProfile.discordId !== profile.discordId) {
@@ -76,9 +83,12 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 
     // create collector for the buttons
 		const filter = i => i.user.id === interaction.user.id && !i.user.bot
-		const collector = interaction.channel.createMessageComponentCollector({ filter, time: 1800000 }) // 30 minutes
+		const collector = interaction.channel.createMessageComponentCollector({ filter, time: 30000 }) // 30 seconds
 
 		collector.on('collect', async (i) => {
+      // for some reason some users are able to go through the filter sometimes and press the buttons of other users' => check if the user is the same
+      if (i.user.id !== interaction.user.id) return await i.reply("You seriously thought I would let you do that?")
+
 			if (i.customId === 'suspend_account') {
         // suspend the user
         await profileSchema.updateOne({ discordId: profile.discordId }, { suspended: true })
