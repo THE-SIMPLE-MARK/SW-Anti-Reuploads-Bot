@@ -9,6 +9,9 @@ export const execute = async (client, interaction) => {
 	// if bot, ignore
 	if (interaction.user.bot) return;
 
+	// hopefully this fixes the weird interaction errors
+	if (!interaction) return;
+
 	// connect to database
 	let isMod = false;
 	let isAdmin = false;

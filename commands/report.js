@@ -32,14 +32,13 @@ const commonNames = [
 	"base", "microcontroller","tank","test","fly"];
 
 export const execute = async (client, interaction, isMod, isAdmin) => {
-	await interaction.deferReply()
     // open database connection
     await mongo().then(async () => {
       const url = interaction.options.getString("report_url");
 			const originalUrl = interaction.options.getString("original_url");
 
       // return if input is not at least pretending to be a URL
-      if (!url.startsWith("https://steamcommunity.com/sharedfiles/filedetails/?id=")) return await interaction.editReply("The input is not a valid steam URL.")
+      if (!url.startsWith("https://steamcommunity.com/sharedfiles/filedetails/?id=")) return await interaction.reply("The input is not a valid steam URL.")
 			const urlId = url.replace(/\D+/g, "")
 			
 			// create and append data to a new form
@@ -49,7 +48,7 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 
 			// return if input is not at least pretending to be a URL
 			if (originalUrl) {
-				if (!originalUrl.startsWith("https://steamcommunity.com/sharedfiles/filedetails/?id=")) return await interaction.editReply("The input is not a valid steam URL.")
+				if (!originalUrl.startsWith("https://steamcommunity.com/sharedfiles/filedetails/?id=")) return await interaction.reply("The input is not a valid steam URL.")
 				const originalUrlId = originalUrl.replace(/^\D+/g, "")
 				form.append('publishedfileids[1]', originalUrlId)
 				form.append('itemcount', 2)
@@ -66,7 +65,7 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
       	}
 			);
 			// check if POST request was successful
-      if (!response.ok) return await interaction.editReply("An error occured while fetching the vehicle's details.")
+      if (!response.ok) return await interaction.reply("An error occured while fetching the vehicle's details.")
 			
 			// extract data to JSON
       const data = await response.json();
@@ -77,9 +76,9 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 			}
 
 			// double check if request was successful from Steam's side
-      if (vehicleData.result !== 1) return await interaction.editReply("The workshop vehicle given was not found.")
+      if (vehicleData.result !== 1) return await interaction.reply("The workshop vehicle given was not found.")
 			if (originalUrl) {
-				if (vehicleData2.result !== 1) return await interaction.editReply("The original workshop vehicle given was not found.")
+				if (vehicleData2.result !== 1) return await interaction.reply("The original workshop vehicle given was not found.")
 			}
 
 			let vehicleTags = "";
@@ -112,7 +111,7 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 			const creatorDataJson = await creatorData.json()
 			
 			// check if the request was successful
-			if (creatorDataJson.response.players[0].success == false) return await i.editReply("An error occured while fetching the creator's profile.")
+			if (creatorDataJson.response.players[0].success == false) return await i.reply("An error occured while fetching the creator's profile.")
 
 			// construct new Discord embed
 			const embed = new Discord.MessageEmbed()
@@ -160,7 +159,7 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 				)
 
 			// send the embed to the channel
-			await interaction.editReply({ embeds: [embed], components: [row] })
+			await interaction.reply({ embeds: [embed], components: [row] })
 
 			// create collector for the buttons
 			const filter = i => i.user.id === interaction.user.id && !i.user.bot
@@ -180,9 +179,6 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 					// if not the current reporter is added to the array
 
 					const report = await reportSchema.findOne({ steamId: urlId })
-					console.log(report)
-					console.log(interaction.user)
-					console.log((report.reporters.includes(interaction.user.id)))
 					if (report) {
 						// check if the user has already reported the vehicle
 						if (report.reporters.includes(interaction.user.id)) return await i.reply("You have already reported this vehicle.")
