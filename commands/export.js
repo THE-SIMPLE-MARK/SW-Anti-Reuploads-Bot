@@ -28,17 +28,16 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 
 		// get required data and convert to csv
 		const data = [
-			{ index: "0", createdAt: "Report Created At", voters: "Votes", steamCreatorId: "Author of vehicle ID", steamCreatorName: "Vehicle author name", vehicleName: "Vehicle name", vehicleUrl: "Vehicle URL", originalVehicleName: "Original Vehicle Name", originalVehicleUrl: "Original Vehicle URL" }
+			{ index: "0", id: "Report ID", createdAt: "Report Created At", voters: "Votes", steamCreatorId: "Author of vehicle ID", steamCreatorName: "Vehicle author name", vehicleName: "Vehicle name", vehicleUrl: "Vehicle URL", originalVehicleName: "Original Vehicle Name", originalVehicleUrl: "Original Vehicle URL" }
 		]
 
 		reportsData.forEach(report => {
 			// check if the originalVehicle was provided, if not set it's values to "-"
 			try {
 				const validator = report.originalVehicle.name
-				data.push({ index: reportsData.indexOf(report)+1, createdAt: report.createdAt.toUTCString().replaceAll(',','.'), voters: report.reporters.length, steamCreatorId: report.creatorId, steamCreatorName: report.vehicle.creatorName, vehicleName: report.vehicle.name, vehicleUrl: report.vehicle.steamUrl, originalVehicleName: report.originalVehicle.name, originalVehicleUrl: report.originalVehicle.steamUrl })
+				data.push({ index: reportsData.indexOf(report)+1, id: report._id,createdAt: report.createdAt.toUTCString().replaceAll(',','.'), voters: report.reporters.length, steamCreatorId: report.creatorId, steamCreatorName: report.vehicle.creatorName, vehicleName: report.vehicle.name, vehicleUrl: report.vehicle.steamUrl, originalVehicleName: report.originalVehicle.name, originalVehicleUrl: report.originalVehicle.steamUrl })
 			} catch (e) {
-				console.log(report.createdAt.toUTCString())
-				data.push({ index: reportsData.indexOf(report)+1, createdAt: report.createdAt.toUTCString().replaceAll(',','.'), voters: report.reporters.length, steamCreatorId: report.creatorId, steamCreatorName: report.vehicle.creatorName, vehicleName: report.vehicle.name, vehicleUrl: report.vehicle.steamUrl, originalVehicleName: "-", originalVehicleUrl: "-" })
+				data.push({ index: reportsData.indexOf(report)+1, id: report._id, createdAt: report.createdAt.toUTCString().replaceAll(',','.'), voters: report.reporters.length, steamCreatorId: report.creatorId, steamCreatorName: report.vehicle.creatorName, vehicleName: report.vehicle.name, vehicleUrl: report.vehicle.steamUrl, originalVehicleName: "-", originalVehicleUrl: "-" })
 			}
 		});
 
