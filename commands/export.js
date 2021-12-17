@@ -20,7 +20,10 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 	await mongo().then(async () => {
 		// get all reports sorted by reporters amount
 		const amount = interaction.options.getNumber("amount")
-		if (amount>100) return await interaction.editReply("Please do not export more than 100 reports at once.")
+		if (amount>100) return await interaction.editReply({
+			content: "Please do not export more than 100 reports at once.",
+			ephemeral: true,
+		})
 		const reportsData = await reportSchema.find({}).sort({ reportAm: -1 }).limit(amount).lean()
 
 		// get required data and convert to csv

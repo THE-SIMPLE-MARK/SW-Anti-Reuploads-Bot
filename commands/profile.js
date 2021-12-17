@@ -14,6 +14,11 @@ import { mongo } from "../mongo.js";
 import { profileSchema, reportSchema } from "../schemas.js";
 
 export const execute = async (client, interaction, isMod, isAdmin) => {
+  // return if used outside of guild
+  if (!interaction.member) return interaction.reply({
+    content: "This command can only be used in a server.",
+    ephemeral: true,
+  })
 	await interaction.deferReply()
   // open database connection
   await mongo().then(async () => {
