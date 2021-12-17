@@ -26,11 +26,14 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 		reportsData.forEach(report => {
 			try {
 				const validator = report.originalVehicle.name
-				embed.addField(`\`${reportsData.indexOf(report)+1}\`-${report.vehicle.name} by ${report.vehicle.creatorName}`, `[*This vehicle was reported ${report.reporters.length} time(s).*](${report.vehicle.steamUrl})`, false)
+				if (isAdmin || isMod) embed.addField(`\`${reportsData.indexOf(report)+1}\`-${report.vehicle.name} by ${report.vehicle.creatorName}`, `[*This vehicle was reported ${report.reporters.length} time(s).*](${report.vehicle.steamUrl})\nID: ${report._id}`, false)
+				else embed.addField(`\`${reportsData.indexOf(report)+1}\`-${report.vehicle.name} by ${report.vehicle.creatorName}`, `[*This vehicle was reported ${report.reporters.length} time(s).*](${report.vehicle.steamUrl})`, false)
 			} catch (e) {
-				embed.addField(`\`${reportsData.indexOf(report)+1}\`-${report.vehicle.name} by ${report.vehicle.creatorName}`, `[*This vehicle was reported ${report.reporters.length} time(s).*](${report.vehicle.steamUrl})\n__Original vehicle: [${report.originalVehicle.steamUrl}](${report.originalVehicle.steamUrl})__`, false)
+				if (isAdmin || isMod) embed.addField(`\`${reportsData.indexOf(report)+1}\`-${report.vehicle.name} by ${report.vehicle.creatorName}`, `[*This vehicle was reported ${report.reporters.length} time(s).*](${report.vehicle.steamUrl})\n__Original vehicle: [${report.originalVehicle.steamUrl}](${report.originalVehicle.steamUrl})\nID: ${report._id}__`, false)
+				else embed.addField(`\`${reportsData.indexOf(report)+1}\`-${report.vehicle.name} by ${report.vehicle.creatorName}`, `[*This vehicle was reported ${report.reporters.length} time(s).*](${report.vehicle.steamUrl})\n__Original vehicle: [${report.originalVehicle.steamUrl}](${report.originalVehicle.steamUrl})__`, false)
 			}
 		});
+
 		// if there are no reports add a new field
 		if (reportsData.length == 0) {
 			embed.addField("No reports found", "There are no reports, keep up the good work! :)")
