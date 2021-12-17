@@ -9,6 +9,7 @@ import * as Discord from "discord.js";
 import 'dotenv/config';
 import { mongo } from "../mongo.js";
 import { profileSchema, reportSchema } from "../schemas.js";
+import * as packageInfo from "../package.json";
 
 export const execute = async (client, interaction, isMod, isAdmin) => {
 	await interaction.deferReply()
@@ -26,11 +27,12 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
   // count the amount of profiles not suspended
   const activeProfiles = profiles.filter(profile => !profile.suspended)
 
+
 	const embed = new Discord.MessageEmbed()
     .setColor("#BCBCBF")
     .setTitle("Stormworks Anti Reuploads")
-    .setDescription("A Discord bot that helps you fight against reuploaders and shitposters.")
-    .addField("Version", process.env.npm_package_version, true)
+    .setDescription(packageInfo.default.description)
+    .addField("Version", packageInfo.default.version, true)
     .addField("Uptime", `${days}d ${hours}h ${minutes}m ${seconds}s`, true)
     .addField("Last Reboot", time(new Date(lastReboot)), true)
     .addField("Guilds", client.guilds.cache.size.toString(), true)
