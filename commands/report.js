@@ -163,13 +163,26 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 
 			// create collector for the buttons
 			const filter = i => i.user.id === interaction.user.id && !i.user.bot
-			const collector = interaction.channel.createMessageComponentCollector({ filter, time: 1800000 }) // 30 minutes
+			const collector = interaction.channel.createMessageComponentCollector({ filter, time: 60000 }) // 1 minute
+			
+			// fix the collector firing twice after the second time
+			let alreadyReplied1 = false;
+			let alreadyReplied2 = false;
+			let alreadyReplied3 = false;
 
 			collector.on('collect', async (i) => {
 				// for some reason some users are able to go through the filter sometimes and press the buttons of other users' => check if the user is the same
-				if (i.user.id !== interaction.user.id) return await i.reply("You seriously thought I would let you do that?")
+				if (i.user.id !== interaction.user.id) return await i.reply({
+					content: "You seriously thought I would let you do that?",
+					ephermal: true
+				})
 
 				if (i.customId === 'confirm_report') {
+					// check if the interaction has been already replied to
+					if (alreadyReplied1) return;
+					alreadyReplied1 = true;
+
+					await i.deferReply()
 
 					// create new report
 					// check if report already exists and update it if it does update it, otherwise create a new one
@@ -179,7 +192,7 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 					const report = await reportSchema.findOne({ steamId: urlId })
 					if (report) {
 						// check if the user has already reported the vehicle
-						if (report.reporters.includes(interaction.user.id)) return await i.reply("You have already reported this vehicle.")
+						if (report.reporters.includes(interaction.user.id)) return await i.editReply("You have already reported this vehicle.")
 
 						report.reporters.push(interaction.user.id)
 						
@@ -188,7 +201,7 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 
 						// reply with success message
 						allocateXP(i)
-						await i.reply("Your report has been successfully submitted. As a reward for your contribution, you have been rewarded with some XP.")
+						await i.editReply("Your report has been successfully submitted. As a reward for your contribution, you have been rewarded with some XP.")
 					} else {
 						const newArray = [interaction.user.id]
 
@@ -237,9 +250,12 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 
 						// reply with success message
 						allocateXP(i)
-						await i.reply("Your report has been successfully submitted. As a reward for your contribution, you have been rewarded with some XP.")
+						await i.editReply("Your report has been successfully submitted. As a reward for your contribution, you have been rewarded with some XP.")
 					}
 				} else if (i.customId === 'show_creator_profile') {
+					// check if the interaction has been already replied to
+					if (alreadyReplied2) return;
+					alreadyReplied2 = true;
 
 					// get all reported vehicles from the creator
 					const reports = await reportSchema.find({ creatorId: vehicleData.creator })
@@ -263,6 +279,8 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 					// if the vehicleNamesUrls string is longer than 800 characters, it will be cut down to 800 characters and add a ... at the end
 					let vehicleDatas = vehicleNamesUrls.join('\n')
 					if (vehicleNamesUrls.length > 800) vehicleNamesUrlsShort = vehicleNamesUrls.join('\n').slice(0, 800) + "..."
+					// if the vehicleDatas is empty, it will be replaced with a message
+					if (vehicleDatas === "") vehicleDatas = "*No records found.*"
 					
 					// check how many of the creator's vehicles have common names
 					let commonNamesAm = 0
@@ -289,6 +307,9 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 						.setTimestamp()
 					await i.reply({ embeds: [embed] })
 				} else if (i.customId === 'delete_report') {
+					// check if the interaction has been already replied to
+					if (alreadyReplied3) return;
+					alreadyReplied3 = true;
 
 					// delete the report if it exists
 					const report = await reportSchema.findOne({ steamId: vehicleData.publishedfileid });

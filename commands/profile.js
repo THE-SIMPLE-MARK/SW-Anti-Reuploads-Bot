@@ -83,18 +83,33 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 
     // create collector for the buttons
 		const filter = i => i.user.id === interaction.user.id && !i.user.bot
-		const collector = interaction.channel.createMessageComponentCollector({ filter, time: 30000 }) // 30 seconds
+		const collector = interaction.channel.createMessageComponentCollector({ filter, time: 60000 }) // 1 minute
+
+    // fix the collector firing twice after the second time
+		let alreadyReplied1 = false;
+		let alreadyReplied2 = false;
 
 		collector.on('collect', async (i) => {
       // for some reason some users are able to go through the filter sometimes and press the buttons of other users' => check if the user is the same
-      if (i.user.id !== interaction.user.id) return await i.reply("You seriously thought I would let you do that?")
+      if (i.user.id !== interaction.user.id) return await i.reply({
+        content: "You seriously thought I would let you do that?",
+        ephermal: true
+      })
 
 			if (i.customId === 'suspend_account') {
+        // check if the interaction has been already replied to
+				if (alreadyReplied1) return;
+				alreadyReplied1 = true;
+
         // suspend the user
         await profileSchema.updateOne({ discordId: profile.discordId }, { suspended: true })
         // send confirmation
         await i.reply("Account has been successfully suspended.")
       } else if (i.customId === 'reactivate_account') {
+        // check if the interaction has been already replied to
+				if (alreadyReplied2) return;
+				alreadyReplied2 = true;
+
         // reactivate the user
         await profileSchema.updateOne({ discordId: profile.discordId }, { suspended: false })
         // send confirmation

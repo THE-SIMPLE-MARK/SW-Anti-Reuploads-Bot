@@ -1,9 +1,9 @@
 export const name = 'interactionCreate';
 import { mongo } from "../mongo.js";
 import { profileSchema } from "../schemas.js";
-import { RateLimiter } from "discord.js-rate-limiter";
 
-const rateLimiter = new RateLimiter(3,10*1000);
+let recentlyRan = [];
+const cooldown = 5; // seconds
 
 export const execute = async (client, interaction) => {
 	// if bot, ignore
@@ -55,15 +55,27 @@ export const execute = async (client, interaction) => {
 		})
 	}
 
+	// check if the user has not run this command too frequently
+	let userId = interaction.user.id;
+	try {
+		if (recentlyRan.includes(userId)) return await interaction.reply({
+			content: 'You have been rate limited. Please wait a few seconds before using this command again.',
+			ephemeral: true,
+		})
+	} catch(e) {}
+	
+	recentlyRan.push(userId)
+	setTimeout(() => {
+		recentlyRan = recentlyRan.filter((string) => {
+			return string !== userId
+		})
+	}, 1000 * cooldown)
+
+
 	// CHAT_INPUT commands
 	if (interaction.isCommand()) {
 		// if not in collection return
 		if (!client.commands.has(interaction.commandName)) return;
-		// check if user is rate limited
-		if (rateLimiter.take(interaction.user.id)) return await interaction.reply({
-			content: 'You are being rate limited. Please wait a few seconds and try again.',
-			ephemeral: true,
-		});
 
 		try {
 			// execute command logic
