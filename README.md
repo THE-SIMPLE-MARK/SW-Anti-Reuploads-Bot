@@ -22,9 +22,9 @@
     An open source community powered Discord bot to stop and remove the trash from the SW workshop.
     <br />
     <br />
-    <a href="https://github.com/othneildrew/Best-README-Template">SW Discord</a>
+    <a href="https://discord.gg/stormworks">SW Discord</a>
     .
-    <a href="https://github.com/othneildrew/Best-README-Template">Creator's Discord</a>
+    <a href="https://discord.gg/5KV3ncvmuJ">Creator's Discord</a>
     ·
     <a href="https://github.com/othneildrew/Best-README-Template/issues">Report Bug</a>
     ·
@@ -51,12 +51,8 @@
         <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
   </ol>
 </details>
 
@@ -70,10 +66,10 @@ There was always a problem with the amount of garbage and re-uploads on the Stea
 Here's how:
 * This project is completely open source so every single one of the Stormworks community members can suggest features and report bugs.
 * You can report re-uploads and trash vehicles that are on the workshop, this is how that will go:
-    1) You find a vehicle that is a shitpost or a reupload on the workshop.
-    2) You submit it to the bot.
-    3) Others will upvote your report.
-    4) Once there are enough reuploads, a SW Admin will export the reports to a CSV sheet (even you can do that with `/export`) and deletes the creations off the workshop.
+    - You find a vehicle that is a shitpost or a reupload on the workshop.
+    - You submit it to the bot.
+    - Others will upvote your report.
+    - Once there are enough reuploads, a SW Admin will export the reports to a CSV sheet (even you can do that with `/export`) and deletes the creations off the workshop.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
