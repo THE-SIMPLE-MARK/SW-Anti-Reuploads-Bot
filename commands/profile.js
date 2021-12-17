@@ -61,6 +61,7 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
     }
 
     // create buttons and send the embed with them
+    let interactionMessage;
     if (profile.suspended && (isMod || isAdmin) && authorProfile.discordId !== profile.discordId) {
       const row = new Discord.MessageActionRow()
       .addComponents(
@@ -69,7 +70,7 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
           .setLabel('Re-activate Account')
           .setStyle('DANGER')
       )
-      await interaction.editReply({ embeds: [embed], components: [row] })
+      interactionMessage = await interaction.editReply({ embeds: [embed], components: [row], fetchReply: true })
     } else if (!profile.suspended && (isMod || isAdmin) && authorProfile.discordId !== profile.discordId) {
       const row = new Discord.MessageActionRow()
       .addComponents(
@@ -78,12 +79,12 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
           .setLabel('Suspend Account')
           .setStyle('DANGER')
       )
-      await interaction.editReply({ embeds: [embed], components: [row] })
-    } else await interaction.editReply({ embeds: [embed] })
+      interactionMessage = await interaction.editReply({ embeds: [embed], components: [row], fetchReply: true })
+    } else interactionMessage = await interaction.editReply({ embeds: [embed], fetchReply: true })
 
     // create collector for the buttons
 		const filter = i => i.user.id === interaction.user.id && !i.user.bot
-		const collector = interaction.channel.createMessageComponentCollector({ filter, time: 60000 }) // 1 minute
+		const collector = interactionMessage.createMessageComponentCollector({ filter, time: 60000, componentType: "BUTTON" }) // 1 minute
 
     // fix the collector firing twice after the second time
 		let alreadyReplied1 = false;

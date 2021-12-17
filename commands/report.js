@@ -159,11 +159,11 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 				)
 
 			// send the embed to the channel
-			await interaction.reply({ embeds: [embed], components: [row] })
+			const interactionMessage = await interaction.reply({ embeds: [embed], components: [row], fetchReply: true })
 
 			// create collector for the buttons
 			const filter = i => i.user.id === interaction.user.id && !i.user.bot
-			const collector = interaction.channel.createMessageComponentCollector({ filter, time: 60000 }) // 1 minute
+			const collector = interactionMessage.createMessageComponentCollector({ filter, time: 60000, componentType: "BUTTON" }) // 1 minute
 			
 			// fix the collector firing twice after the second time
 			let alreadyReplied1 = false;
