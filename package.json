@@ -1,6 +1,6 @@
 {
   "name": "sw-anti-reuploads-bot",
-  "version": "v0.9 BETA",
+  "version": "v1.0.0",
   "description": "A Discord Bot to stop reuploads in the world of Stormworks.",
   "main": "bot.js",
   "type": "module",
