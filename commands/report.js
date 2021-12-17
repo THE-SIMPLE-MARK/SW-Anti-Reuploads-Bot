@@ -166,12 +166,10 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 			const collector = interaction.channel.createMessageComponentCollector({ filter, time: 1800000 }) // 30 minutes
 
 			collector.on('collect', async (i) => {
-				console.log("button pressed")
 				// for some reason some users are able to go through the filter sometimes and press the buttons of other users' => check if the user is the same
 				if (i.user.id !== interaction.user.id) return await i.reply("You seriously thought I would let you do that?")
 
 				if (i.customId === 'confirm_report') {
-					console.log("confirm report")
 
 					// create new report
 					// check if report already exists and update it if it does update it, otherwise create a new one
@@ -182,7 +180,7 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 					if (report) {
 						// check if the user has already reported the vehicle
 						if (report.reporters.includes(interaction.user.id)) return await i.reply("You have already reported this vehicle.")
-						console.log("report exists")
+
 						report.reporters.push(interaction.user.id)
 						
 						// count the vote
@@ -192,7 +190,6 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 						allocateXP(i)
 						await i.reply("Your report has been successfully submitted. As a reward for your contribution, you have been rewarded with some XP.")
 					} else {
-						console.log("report does not exist")
 						const newArray = [interaction.user.id]
 
 						// don't send the originalVehicle data if it doesn't exist
