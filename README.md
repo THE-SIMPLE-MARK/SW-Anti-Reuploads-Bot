@@ -23,7 +23,7 @@
     <br />
     <br />
     <a href="https://discord.gg/stormworks">SW Discord</a>
-    .
+    ·
     <a href="https://discord.gg/5KV3ncvmuJ">Creator's Discord</a>
     ·
     <a href="https://github.com/othneildrew/Best-README-Template/issues">Report Bug</a>
