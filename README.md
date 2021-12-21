@@ -116,13 +116,15 @@ You're required to have the latest [Node.js](https://nodejs.org/en/download/) an
    ```sh
    npm install
    ```
-4. Create and fill out `.env`
-5. 
+4. Create and fill out `.env` 
    ```js
    BOT_TOKEN=
    DB_PATH=
    STEAM_API_KEY=
+   GOOGLE_API_KEY=
+   GOOGLE_SHEET_ID=
    ```
+5. Download your Google API private key and put the JSON file (`gpai_privatekey.json`) into the root directory.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
