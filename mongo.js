@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
 import "dotenv/config";
+import { logger } from "./utils/logger.js";
 
 export const mongo = async () => {
-	if (process.argv.includes('--debug')) console.log("Database DEBUG >> The was accessed.")
+	logger.debug(`Database connection opened.`)
 	await mongoose.connect(process.env.DB_PATH, { useNewUrlParser: true, useUnifiedTopology: true })
 	return mongoose
 }

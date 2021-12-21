@@ -2,9 +2,10 @@ export const name = 'ready';
 export const once = true;
 
 import { mongo } from "../mongo.js";
+import { logger } from "../utils/logger.js";
 
 const setInteractions = true; // wether to set the commands&context menus on startup
-const guildId = '899639850536411136';
+export const guildId = '922222139468304434';
 const privateCommands = [];
 const globalCommands = [];
 const testing = false; // enable this to register all commands private
@@ -12,7 +13,7 @@ const testing = false; // enable this to register all commands private
 export const execute = async (client) => {
 	// set presence
 	client.user.setPresence({
-		activities: [{ name: 'public beta.', type: 'WATCHING' }],
+		activities: [{ name: 'to slash commands.', type: 'LISTENING' }],
 		status: 'online',
 	});
 
@@ -48,7 +49,9 @@ export const execute = async (client) => {
 	} else {
 		console.log('Interactions >> Skipped registering interactions.')
 	}
-	console.log(`${client.user.tag} >> Logged in!`);
+	logger.info(`Logged in as ${client.user.tag}`)
+	console.log(`${client.user.tag} >> Logged in!`)
+	console.log(`Winston Logging Utility >> Online`)
 
 	// log into database
 	await mongo().then(mongoose => { try { console.log('Database >> Connected to mongoose. Database fully operational!') } finally { mongoose.connection.close() } })

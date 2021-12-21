@@ -7,18 +7,18 @@ export const data = new SlashCommandBuilder()
       .setDescription("The ID of the report to delete.")
       .setRequired(true))
 
-import { SlashCommandBuilder, time } from "@discordjs/builders";
-import { footerIcon } from "../utils/helpers.js"
-import * as Discord from "discord.js";
+import { SlashCommandBuilder } from "@discordjs/builders";
+import { updateSheetData } from "../utils/helpers.js"
 import 'dotenv/config';
 import { mongo } from "../mongo.js";
-import { profileSchema, reportSchema } from "../schemas.js";
+import { reportSchema } from "../schemas.js";
+import { logger } from "../utils/logger.js";
 
 export const execute = async (client, interaction, isMod, isAdmin) => {
-	await interaction.deferReply()
+	await interaction.deferReply({ ephemeral: true });
   
-  // check if user is mod or admin
-  if (!isMod && !isAdmin) return await interaction.editReply({
+  // check if user is admin
+  if (!isAdmin) return await interaction.editReply({
     content: "You are not allowed to use this command.",
     ephemeral: true,
   })
@@ -40,6 +40,9 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
     // send message
     await interaction.editReply({
       content: `Report \`#${report._id}\` has been deleted.`,
+      ephemeral: true,
     })
+    updateSheetData()
+    logger.info(`Report #${report._id} has been deleted by ${interaction.id}.`)
   });
 };

@@ -1,9 +1,12 @@
 export const name = 'interactionCreate';
 import { mongo } from "../mongo.js";
 import { profileSchema } from "../schemas.js";
+import { logger } from "../utils/logger.js";
+import { guildId } from "../events/ready.js";
 
 let recentlyRan = [];
-const cooldown = 5; // seconds
+const cooldown = 8; // seconds
+const maintenanceMode = false;
 
 export const execute = async (client, interaction) => {
 	// if bot, ignore
@@ -11,6 +14,26 @@ export const execute = async (client, interaction) => {
 
 	// hopefully this fixes the weird interaction errors
 	if (!interaction) return;
+
+	// only allow interactions from one guild if maintenanceMode is true
+	try {
+		if (maintenanceMode && !interaction.inGuild()) { 
+			return await interaction.reply({
+				content: 'The bot is currently under maintenance. Please try again later.',
+				ephemeral: true,
+			})
+		} else if (maintenanceMode && interaction.guild.id !== guildId) {
+				return await interaction.reply({
+					content: 'The bot is currently under maintenance. Please try again later.',
+					ephemeral: true,
+				})
+		}
+	} catch(e) {
+		return await interaction.editReply({
+			content: 'The bot is currently under maintenance. Please try again later.',
+			ephemeral: true,
+		})
+	}
 
 	// connect to database
 	let isMod = false;
@@ -44,11 +67,15 @@ export const execute = async (client, interaction) => {
 	
 	// stop user from using the bot if they are suspended
 	try {
-		if (isSuspended) return await interaction.reply({
-			content: 'You have been suspended from using this bot. Ban appeals are not yet available.',
-			ephemeral: true,
-		})
+		if (isSuspended) {
+			logger.debug(`User ${interaction.user.id} has tried using the bot while they're suspended.`)
+			return await interaction.reply({
+				content: 'You have been suspended from using this bot. Ban appeals are not yet available.',
+				ephemeral: true,
+			})
+		}
 	} catch(e) {
+		logger.debug(`User ${interaction.user.id} has tried using the bot while they're suspended.`)
 		return await interaction.editReply({
 			content: 'You have been suspended from using this bot. Ban appeals are not yet available.',
 			ephemeral: true,
@@ -58,10 +85,13 @@ export const execute = async (client, interaction) => {
 	// check if the user has not run this command too frequently
 	let userId = interaction.user.id;
 	try {
-		if (recentlyRan.includes(userId)) return await interaction.reply({
-			content: 'You have been rate limited. Please wait a few seconds before using this command again.',
-			ephemeral: true,
-		})
+		if (recentlyRan.includes(userId)) {
+			logger.debug(`User ${userId} has tried using the bot while they're on cooldown.`)
+			return await interaction.reply({
+				content: 'You have been rate limited. Please wait a few seconds before using this command again.',
+				ephemeral: true,
+			})
+		}
 	} catch(e) {}
 	
 	recentlyRan.push(userId)
@@ -70,7 +100,6 @@ export const execute = async (client, interaction) => {
 			return string !== userId
 		})
 	}, 1000 * cooldown)
-
 
 	// CHAT_INPUT commands
 	if (interaction.isCommand()) {
@@ -83,7 +112,7 @@ export const execute = async (client, interaction) => {
 				.get(interaction.commandName)
 				.execute(client, interaction, isMod, isAdmin);
 		} catch (error) {
-      console.error(error)
+			logger.error(`There was an error while trying to execute ${interaction.commandName} (SLASH COMMAND); User: ${interaction.user.id}; Error: [${error.name}] (${error.lineNumber}:${error.columnNumber}): ${error.message}`)
 			// respond with error messsage
 			await interaction.reply({
 				content: 'There was an error while executing this command!',
@@ -108,7 +137,7 @@ export const execute = async (client, interaction) => {
 				.get(interaction.commandName)
 				.execute(client, interaction, interaction.options.getMessage('message'), isMod, isAdmin);
 		} catch (error) {
-      console.error(error)
+			logger.error(`There was an error while trying to execute ${interaction.commandName} (CONTEXT_MENU); User: ${interaction.user.id}; Error: [${error.name}] (${error.lineNumber}:${error.columnNumber}): ${error.message}`)
 			// respond with error message
 			await interaction.reply({
 				content: 'There was an error while executing this command!',
@@ -133,7 +162,7 @@ export const execute = async (client, interaction) => {
 				.get(interaction.customId)
 				.execute(client, interaction, isMod, isAdmin);
 		} catch (error) {
-      console.error(error)
+			logger.error(`There was an error while trying to execute ${interaction.customId} (BUTTON); User: ${interaction.user.id}; Error: [${error.name}] (${error.lineNumber}:${error.columnNumber}): ${error.message}`)
 			// respond with error message
 			await interaction.reply({
 				content: 'There was an error while executing this command!',
@@ -156,7 +185,7 @@ export const execute = async (client, interaction) => {
 			// execute menu logic
 			await client.menus.get(interaction.customId).execute(client, interaction);
 		} catch (error) {
-      console.error(error)
+			logger.error(`There was an error while trying to execute ${interaction.customId} (SELECT_MENU); User: ${interaction.user.id}; Error: [${error.name}] (${error.lineNumber}:${error.columnNumber}): ${error.message}`)
 			// respond with error message
 			await interaction.reply({
 				content: 'There was an error while executing this command!',

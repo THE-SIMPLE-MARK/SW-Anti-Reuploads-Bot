@@ -12,6 +12,7 @@ import { footerIcon } from "../utils/helpers.js"
 import * as Discord from "discord.js";
 import { mongo } from "../mongo.js";
 import { profileSchema, reportSchema } from "../schemas.js";
+import { logger } from "../utils/logger.js";
 
 export const execute = async (client, interaction, isMod, isAdmin) => {
   // return if used outside of guild
@@ -31,6 +32,8 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
     const authorProfile = await profileSchema.findOne({ discordId: interaction.user.id })
     // get all reports
     const reportsData = await reportSchema.find({})
+
+    const correctUser = user ? user : interaction.user
 
     // check how many reports the user has voted on
     let reportsWithVotes = 0;
@@ -69,31 +72,41 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
     let interactionMessage;
     if (profile.suspended && (isMod || isAdmin) && authorProfile.discordId !== profile.discordId) {
       const row = new Discord.MessageActionRow()
-      .addComponents(
-        new Discord.MessageButton()
-          .setCustomId('reactivate_account')
-          .setLabel('Re-activate Account')
-          .setStyle('DANGER')
-      )
+        .addComponents(
+          new Discord.MessageButton()
+            .setCustomId('reactivate_account')
+            .setLabel('Re-activate Account')
+            .setStyle('DANGER')
+        )
       interactionMessage = await interaction.editReply({ embeds: [embed], components: [row], fetchReply: true })
     } else if (!profile.suspended && (isMod || isAdmin) && authorProfile.discordId !== profile.discordId) {
       const row = new Discord.MessageActionRow()
-      .addComponents(
-        new Discord.MessageButton()
-          .setCustomId('suspend_account')
-          .setLabel('Suspend Account')
-          .setStyle('DANGER')
-      )
+        .addComponents(
+          new Discord.MessageButton()
+            .setCustomId('suspend_account')
+            .setLabel('Suspend Account')
+            .setStyle('DANGER'),
+        )
+      interactionMessage = await interaction.editReply({ embeds: [embed], components: [row], fetchReply: true })
+    } else if (correctUser.id === interaction.user.id) {
+      const row = new Discord.MessageActionRow()
+        .addComponents(
+          new Discord.MessageButton()
+            .setCustomId('delete_account')
+            .setLabel('Delete Account')
+            .setStyle('DANGER')
+        )
       interactionMessage = await interaction.editReply({ embeds: [embed], components: [row], fetchReply: true })
     } else interactionMessage = await interaction.editReply({ embeds: [embed], fetchReply: true })
 
     // create collector for the buttons
-		const filter = i => i.user.id === interaction.user.id && !i.user.bot
-		const collector = interactionMessage.createMessageComponentCollector({ filter, time: 60000, componentType: "BUTTON" }) // 1 minute
+		const filter = i => i.user.id === interaction.user.id
+		const collector = interactionMessage.createMessageComponentCollector({ filter, time: 180000, componentType: "BUTTON" }) // 3 minutes
 
     // fix the collector firing twice after the second time
 		let alreadyReplied1 = false;
 		let alreadyReplied2 = false;
+    let alreadyReplied3 = false;
 
 		collector.on('collect', async (i) => {
       // for some reason some users are able to go through the filter sometimes and press the buttons of other users' => check if the user is the same
@@ -111,6 +124,7 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
         await profileSchema.updateOne({ discordId: profile.discordId }, { suspended: true })
         // send confirmation
         await i.reply("Account has been successfully suspended.")
+        logger.info(`${user ? user.id : interaction.user.id}'s account has been suspended by ${interaction.user.id}.`)
       } else if (i.customId === 'reactivate_account') {
         // check if the interaction has been already replied to
 				if (alreadyReplied2) return;
@@ -120,6 +134,21 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
         await profileSchema.updateOne({ discordId: profile.discordId }, { suspended: false })
         // send confirmation
         await i.reply("Account has been successfully reactivated.")
+        logger.info(`${user ? user.id : interaction.user.id}'s account has been reactivated by ${interaction.user.id}.`)
+      } else if (i.customId === 'delete_account') {
+        // check if the interaction has been already replied to
+        if (alreadyReplied3) return;
+        alreadyReplied3 = true;
+
+        // delete the user's account
+        await profileSchema.deleteOne({ discordId: interaction.user.id })
+
+        // send confirmation
+        logger.info(`${interaction.user.id}'s account has been deleted.`)
+        return await i.reply({
+          content: "Your account has been successfully deleted.",
+          ephemeral: true
+        })
       }
     });
   })
