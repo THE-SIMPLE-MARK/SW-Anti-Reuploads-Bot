@@ -13,7 +13,7 @@ const testing = false; // enable this to register all commands private
 export const execute = async (client) => {
 	// set presence
 	client.user.setPresence({
-		activities: [{ name: 'to slash commands.', type: 'LISTENING' }],
+		activities: [{ name: 'slash commands.', type: 'LISTENING' }],
 		status: 'online',
 	});
 
