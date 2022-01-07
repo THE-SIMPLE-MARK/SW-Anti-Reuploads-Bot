@@ -256,7 +256,7 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
 							ephemeral: true
 						})
 
-						await selInt.deferReply()
+						await selInt.deferReply({ ephemeral: true })
 
 						const selectedOption = selInt.values[0]
 						const newArray = [interaction.user.id]

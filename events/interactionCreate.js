@@ -6,7 +6,7 @@ import { guildId } from "../events/ready.js";
 
 let recentlyRan = [];
 const cooldown = 8; // seconds
-const maintenanceMode = false;
+const maintenanceMode = true;
 
 export const execute = async (client, interaction) => {
 	// if bot, ignore

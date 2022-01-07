@@ -139,7 +139,7 @@ export async function pushSheetData(steamId) {
 
     let originalVehicleUrl = "-";
     let originalVehicleName = "-";
-    if (report.originalVehicle.name) {
+    if (report.originalVehicle.length > 0) {
       originalVehicleName = report.originalVehicle.name;
       originalVehicleUrl = report.originalVehicle.steamUrl;
     }
@@ -218,7 +218,7 @@ export async function updateSheetData() {
     reports.forEach(report => {
       let originalVehicleUrl = "-";
       let originalVehicleName = "-";
-      if (report.originalVehicle.name) {
+      if (report.originalVehicle.length > 0) {
         originalVehicleName = report.originalVehicle.name;
         originalVehicleUrl = report.originalVehicle.steamUrl;
       }
@@ -253,4 +253,19 @@ export async function updateSheetData() {
     }, 3000)
   })
   logger.debug("Spreadsheet updated.(2/2)")
+}
+
+/**
+ * @param {*} title the title of the embed
+ * @param {*} description the description of the embed
+ * @returns a discord embed
+ */
+
+export function createErrorEmbed(title, description) {
+  return new Discord.MessageEmbed()
+    .setColor('#FF0000')
+    .setAuthor("Interaction Error", "https://cdn.discordapp.com/attachments/902924492723068969/928311511313694730/interaction_failed.png")
+    .setTitle(title)
+    .setDescription(description)
+    .setTimestamp()
 }

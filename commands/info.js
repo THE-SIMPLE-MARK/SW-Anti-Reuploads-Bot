@@ -35,7 +35,7 @@ export const execute = async (client, interaction, isMod, isAdmin) => {
       .setColor("#BCBCBF")
       .setTitle("Stormworks Anti Reuploads")
       .setDescription("Stormworks Anti Reuploads (SWARS for short) was created to stop the overwhelming amount of garbage and re-uploads on the workshop of Stormworks.")
-      .addField("Version", "v1.1.0", true)
+      .addField("Version", "v1.1.1", true)
       .addField("Uptime", `${days}d ${hours}h ${minutes}m ${seconds}s`, true)
       .addField("Last Reboot", time(new Date(lastReboot)), true)
       .addField("Guilds", client.guilds.cache.size.toString(), true)
